@@ -79,6 +79,12 @@ class TikTokService extends EventEmitter {
     await conn.connect();
     this.roomId = conn.roomId;
 
+    // Amorce le "total du live" (cadeaux depuis le début) depuis les stats de la room.
+    try {
+      const fanTicket = Number(conn.roomInfo && conn.roomInfo.data && conn.roomInfo.data.stats && conn.roomInfo.data.stats.fan_ticket) || 0;
+      if (fanTicket > 0) this.emit('event', { kind: 'roomStats', fanTicket });
+    } catch {}
+
     return {
       roomId: conn.roomId,
       username: this.username,
@@ -133,6 +139,7 @@ class TikTokService extends EventEmitter {
         count,
         diamondsEach,
         diamondsTotal: diamondsEach * count,
+        roomFanTicket: toNumber(d.roomFanTicketCount), // total cumulé de la room (depuis le début du live)
         streakInProgress,
       });
     });

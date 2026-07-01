@@ -5,7 +5,7 @@ export default function StatsPanel({ stats, uptime, connected }) {
   const cards = [
     { icon: Users, label: 'Spectateurs', value: connected ? fmt(stats.viewers) : '—' },
     { icon: Heart, label: 'Likes', value: fmt(stats.likes) },
-    { icon: Coins, label: 'Pièces', value: fmt(stats.coins) },
+    { icon: Coins, label: 'Pièces', value: fmt(stats.coins), note: 'depuis le début' },
     { icon: Gift, label: 'Cadeaux', value: fmt(stats.gifts) },
     { icon: MessageSquare, label: 'Messages', value: fmt(stats.messages) },
     { icon: UserPlus, label: 'Abonnés', value: fmt(stats.follows) },
@@ -25,6 +25,7 @@ export default function StatsPanel({ stats, uptime, connected }) {
               <Icon size={16} className="stat-icon" />
               <div className="stat-val">{c.value}</div>
               <div className="stat-lbl">{c.label}</div>
+              {c.note && <div className="stat-note">{c.note}</div>}
             </div>
           );
         })}

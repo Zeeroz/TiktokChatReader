@@ -59,7 +59,7 @@ export function useLiveData(blockedIds) {
       setStats({
         viewers: a.viewers,
         likes: Math.max(a.likesReported, a.likesCounted),
-        coins: a.coins,
+        coins: Math.max(a.coins, a.liveTotal),
         gifts: a.gifts,
         messages: a.messages,
         follows: a.follows,
@@ -97,10 +97,15 @@ export function useLiveData(blockedIds) {
         b.chat.push({ id: ++idRef.current, type: 'chat', user: p.user, content: p.content });
         b.dirty = true;
         break;
+      case 'roomStats':
+        a.liveTotal = Math.max(a.liveTotal, p.fanTicket || 0);
+        b.dirty = true;
+        break;
       case 'gift':
         if (p.streakInProgress) break;
         a.gifts++;
         a.coins += p.diamondsTotal;
+        a.liveTotal = Math.max(a.liveTotal, p.roomFanTicket || 0);
         if (p.diamondsTotal > 0 && p.user && p.user.id) {
           const cur = donorMap.current.get(p.user.id) || { id: p.user.id, name: p.user.name, avatar: p.user.avatar, coins: 0 };
           cur.coins += p.diamondsTotal;
@@ -175,5 +180,5 @@ function emptyStats() {
   return { viewers: 0, likes: 0, coins: 0, gifts: 0, messages: 0, follows: 0, shares: 0, joins: 0 };
 }
 function emptyAcc() {
-  return { viewers: 0, likesReported: 0, likesCounted: 0, coins: 0, gifts: 0, messages: 0, follows: 0, shares: 0, joins: 0 };
+  return { viewers: 0, likesReported: 0, likesCounted: 0, coins: 0, liveTotal: 0, gifts: 0, messages: 0, follows: 0, shares: 0, joins: 0 };
 }
