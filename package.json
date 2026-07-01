@@ -1,6 +1,6 @@
 {
   "name": "tiktok-live-viewer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Visualiseur de chat, statistiques et cadeaux pour les lives TikTok",
   "main": "src/main/main.js",
   "scripts": {
