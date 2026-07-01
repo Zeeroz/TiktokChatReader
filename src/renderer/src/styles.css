@@ -153,15 +153,19 @@ svg { flex-shrink: 0; }
 .sys-line svg { color: var(--text-faint); }
 .sys-line .who { font-weight: 600; color: var(--text-dim); }
 
-.block-btn {
+.chat-actions {
   position: absolute; top: 4px; right: 4px;
-  display: none; align-items: center; justify-content: center;
+  display: none; gap: 4px;
+}
+.chat-line:hover .chat-actions { display: inline-flex; }
+.block-btn {
+  display: inline-flex; align-items: center; justify-content: center;
   width: 22px; height: 22px; padding: 0;
   border-radius: 4px; background: var(--surface);
   border: 1px solid var(--border-2); color: var(--text-faint); cursor: pointer;
 }
-.chat-line:hover .block-btn { display: inline-flex; }
-.block-btn:hover { color: var(--accent); border-color: var(--accent); }
+.block-btn:hover { color: var(--text); }
+.block-btn.danger:hover { color: var(--accent); border-color: var(--accent); }
 
 .blocked-list { display: flex; flex-direction: column; gap: 5px; max-height: 170px; overflow-y: auto; }
 .blocked-row {

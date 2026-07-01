@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Send, Heart, Share2, Star, BadgeCheck, MessageCircle, Ban } from 'lucide-react';
+import { Send, Heart, Share2, Star, BadgeCheck, MessageCircle, Ban, UserX } from 'lucide-react';
 import Avatar from './Avatar.jsx';
 
 const SYS = {
@@ -8,7 +8,7 @@ const SYS = {
   sub: { icon: Star, cls: 'sub', text: "s'est abonné(e)" },
 };
 
-export default function ChatPanel({ chat, connected, onSend, onBlock, messageCount }) {
+export default function ChatPanel({ chat, connected, onSend, onBlock, onBlockReal, messageCount }) {
   const feedRef = useRef(null);
   const [autoscroll, setAutoscroll] = useState(true);
   const [text, setText] = useState('');
@@ -54,9 +54,14 @@ export default function ChatPanel({ chat, connected, onSend, onBlock, messageCou
                   </span>
                   <span className="chat-text">{m.content}</span>
                 </div>
-                <button className="block-btn" title={`Bloquer ${m.user.name}`} onClick={() => onBlock(m.user)}>
-                  <Ban size={13} />
-                </button>
+                <div className="chat-actions">
+                  <button className="block-btn" title="Masquer dans l'app" onClick={() => onBlock(m.user)}>
+                    <Ban size={13} />
+                  </button>
+                  <button className="block-btn danger" title="Bloquer sur ton compte TikTok" onClick={() => onBlockReal(m.user)}>
+                    <UserX size={13} />
+                  </button>
+                </div>
               </div>
             ) : (
               <SysLine key={m.id} item={m} />

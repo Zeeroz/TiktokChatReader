@@ -197,6 +197,81 @@ ipcMain.handle('tiktok:logout', async () => {
   return store.save({ sessionId: '', ttTargetIdc: '', tiktokConnected: false });
 });
 
+// --- Blocage RÉEL sur le compte TikTok (via automatisation du vrai site) ------
+// On ouvre le profil de la personne dans la session TikTok connectée et on tente
+// de cliquer « … » → « Bloquer » → confirmer. Best-effort : si l'auto échoue,
+// la fenêtre reste ouverte pour un clic manuel.
+const BLOCK_SCRIPT = `(() => {
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  const vis = (el) => el && el.offsetParent !== null;
+  const txt = (el) => ((el && el.textContent) || '').trim();
+  const findByText = (re) => {
+    const els = document.querySelectorAll('button,[role="menuitem"],[role="button"],a,li,span,div,p');
+    for (const el of els) { const t = txt(el); if (t && t.length < 30 && re.test(t) && vis(el)) return el; }
+    return null;
+  };
+  const act = (el) => (el.closest('button,[role="menuitem"],[role="button"],a,li') || el);
+  const waitFor = async (fn, ms) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { const r = fn(); if (r) return r; await sleep(300); } return null; };
+  return (async () => {
+    let more = await waitFor(() => document.querySelector('[data-e2e="user-more"],[data-e2e="more-menu-icon"],button[aria-haspopup="menu"],button[aria-label*="more" i],button[aria-label*="More" i],button[aria-label*="plus" i]'), 9000);
+    if (more) { more.click(); await sleep(900); }
+    let item = await waitFor(() => findByText(/^(block|bloquer)/i), 4000);
+    if (!item) return { ok: false, stage: 'menu' };
+    act(item).click(); await sleep(1100);
+    let confirm = await waitFor(() => findByText(/^(block|bloquer)/i), 3000);
+    if (confirm) { act(confirm).click(); await sleep(700); }
+    return { ok: true };
+  })();
+})()`;
+
+function runTikTokBlock(uniqueId) {
+  return new Promise((resolve) => {
+    const w = new BrowserWindow({
+      width: 900,
+      height: 760,
+      parent: win || undefined,
+      title: 'Bloquer sur TikTok — @' + uniqueId,
+      autoHideMenuBar: true,
+      backgroundColor: '#111111',
+      webPreferences: { partition: TIKTOK_PARTITION, contextIsolation: true, nodeIntegration: false },
+    });
+    w.removeMenu();
+    w.webContents.setWindowOpenHandler(() => ({ action: 'allow' }));
+
+    let settled = false;
+    const done = (r) => { if (!settled) { settled = true; resolve(r); } };
+
+    w.webContents.once('did-finish-load', async () => {
+      try {
+        await new Promise((r) => setTimeout(r, 2500));
+        const result = await w.webContents.executeJavaScript(BLOCK_SCRIPT, true);
+        done({ ok: !!(result && result.ok), manual: !(result && result.ok) });
+      } catch {
+        done({ ok: false, manual: true });
+      }
+    });
+    w.on('closed', () => done({ ok: false, cancelled: true }));
+    w.loadURL('https://www.tiktok.com/@' + encodeURIComponent(uniqueId));
+    setTimeout(() => done({ ok: false, manual: true }), 30000);
+  });
+}
+
+ipcMain.handle('tiktok:blockReal', async (_e, args) => {
+  const uniqueId = args && args.uniqueId;
+  if (!uniqueId) {
+    return { ok: false, error: "Identifiant @ introuvable pour cette personne — blocage TikTok impossible." };
+  }
+  const s = store.load();
+  if (!s.tiktokConnected && !s.sessionId) {
+    return { ok: false, error: "Connecte d'abord ton compte TikTok (Réglages → Se connecter à TikTok)." };
+  }
+  try {
+    return await runTikTokBlock(String(uniqueId));
+  } catch (err) {
+    return { ok: false, error: friendlyError(err) };
+  }
+});
+
 // --- Cycle de vie -------------------------------------------------------------
 
 app.whenReady().then(() => {

@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('api', {
 
   loginTikTok: () => ipcRenderer.invoke('tiktok:login'),
   logoutTikTok: () => ipcRenderer.invoke('tiktok:logout'),
+  blockOnTikTok: (uniqueId) => ipcRenderer.invoke('tiktok:blockReal', { uniqueId }),
   onLogin: (cb) => {
     const handler = (_e, payload) => cb(payload);
     ipcRenderer.on('tiktok:login', handler);

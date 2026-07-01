@@ -233,6 +233,23 @@ export default function App() {
     [blocked]
   );
 
+  const blockOnTikTok = useCallback(
+    async (user) => {
+      if (!user || !user.uniqueId) {
+        showToast('Impossible : identifiant @ introuvable pour cette personne.', 'err');
+        return;
+      }
+      blockUser(user); // masque aussi localement dans l'app
+      showToast('Ouverture du blocage TikTok…', null);
+      const res = await window.api.blockOnTikTok(user.uniqueId);
+      if (res && res.ok) showToast(`@${user.uniqueId} bloqué sur TikTok ✓`, 'ok');
+      else if (res && res.cancelled) { /* fenêtre fermée sans bloquer */ }
+      else if (res && res.manual) showToast('Termine dans la fenêtre TikTok : clique « Bloquer ».', null);
+      else showToast((res && res.error) || 'Échec du blocage TikTok.', 'err');
+    },
+    [blockUser, showToast]
+  );
+
   return (
     <>
       <TopBar
@@ -248,7 +265,7 @@ export default function App() {
       />
 
       <main className="layout">
-        <ChatPanel chat={live.chat} connected={connected} onSend={onSend} onBlock={blockUser} messageCount={live.stats.messages} />
+        <ChatPanel chat={live.chat} connected={connected} onSend={onSend} onBlock={blockUser} onBlockReal={blockOnTikTok} messageCount={live.stats.messages} />
         <aside className="sidecol">
           <StatsPanel stats={live.stats} uptime={uptime} connected={connected} />
           <GiftsPanel gifts={live.gifts} />
