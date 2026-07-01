@@ -117,6 +117,7 @@ svg { flex-shrink: 0; }
   background: var(--surface-2); color: var(--text-dim);
   border-radius: 4px; padding: 1px 7px; font-size: 12px; font-weight: 600; min-width: 22px; text-align: center;
 }
+.head-note { margin-left: auto; font-size: 11px; color: var(--text-faint); }
 .autoscroll { margin-left: auto; font-size: 12px; color: var(--text-dim); display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
 .autoscroll input { accent-color: var(--text-dim); }
 

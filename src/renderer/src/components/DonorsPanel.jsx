@@ -1,4 +1,4 @@
-import { Trophy, Gem } from 'lucide-react';
+import { Trophy, Coins } from 'lucide-react';
 import Avatar from './Avatar.jsx';
 import { fmt } from '../lib/format.js';
 
@@ -8,6 +8,7 @@ export default function DonorsPanel({ donors }) {
       <div className="panel-head">
         <Trophy size={16} className="head-icon" />
         <h2>Top donateurs</h2>
+        <span className="head-note">depuis le début</span>
       </div>
       <div className="donors">
         {donors.length === 0 ? (
@@ -19,7 +20,7 @@ export default function DonorsPanel({ donors }) {
               <Avatar url={d.avatar} size={26} alt={d.name} />
               <div className="donor-name">{d.name}</div>
               <div className="donor-dia">
-                <Gem size={12} /> {fmt(d.diamonds)}
+                <Coins size={12} /> {fmt(d.coins)}
               </div>
             </div>
           ))

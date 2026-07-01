@@ -6,8 +6,9 @@ const FLUSH_MS = 180;
 // Types d'événements liés à un utilisateur → filtrables par le blocage local.
 const BLOCKABLE = new Set(['chat', 'gift', 'follow', 'share', 'subscribe', 'member']);
 
-// Agrège le flux d'événements TikTok et le pousse dans l'état React de façon throttlée
-// (les likes/chat peuvent arriver très vite → on tamponne puis on met à jour ~5 fois/s).
+// Agrège le flux d'événements TikTok et le pousse dans l'état React de façon throttlée.
+// Les « Top donateurs » proviennent du classement cumulé de TikTok (ROOM_USER.ranks),
+// donc depuis le DÉBUT du live ; à défaut, on retombe sur le cumul depuis la connexion.
 // `blockedIds` (Set de ids/uniqueId) masque les utilisateurs bloqués localement.
 export function useLiveData(blockedIds) {
   const [chat, setChat] = useState([]);
@@ -17,11 +18,11 @@ export function useLiveData(blockedIds) {
 
   const buf = useRef({ chat: [], gifts: [], dirty: false });
   const acc = useRef(emptyAcc());
-  const donorMap = useRef(new Map());
+  const donorMap = useRef(new Map()); // cumul local (repli)
+  const ranksRef = useRef([]); // classement cumulé fourni par TikTok
   const idRef = useRef(0);
   const blockedRef = useRef(blockedIds || new Set());
 
-  // Garde la référence du set de blocage à jour pour le gestionnaire d'événements.
   useEffect(() => {
     blockedRef.current = blockedIds || new Set();
   }, [blockedIds]);
@@ -32,10 +33,7 @@ export function useLiveData(blockedIds) {
     if (set.size === 0) return;
     setChat((prev) => prev.filter((m) => !userBlocked(m.user, set)));
     setGifts((prev) => prev.filter((g) => !userBlocked(g.user, set)));
-    for (const id of [...donorMap.current.keys()]) {
-      if (set.has(id)) donorMap.current.delete(id);
-    }
-    setDonors((prev) => prev.filter((d) => !set.has(d.id)));
+    setDonors((prev) => prev.filter((d) => !userBlocked(d, set)));
   }, [blockedIds]);
 
   useEffect(() => {
@@ -61,14 +59,25 @@ export function useLiveData(blockedIds) {
       setStats({
         viewers: a.viewers,
         likes: Math.max(a.likesReported, a.likesCounted),
-        diamonds: a.diamonds,
+        coins: a.coins,
         gifts: a.gifts,
         messages: a.messages,
         follows: a.follows,
         shares: a.shares,
         joins: a.joins,
       });
-      setDonors([...donorMap.current.values()].sort((x, y) => y.diamonds - x.diamonds).slice(0, 8));
+
+      // Top donateurs : classement TikTok (depuis le début) si dispo, sinon cumul local.
+      const bset = blockedRef.current;
+      let donorList;
+      if (ranksRef.current.length) {
+        donorList = ranksRef.current;
+      } else {
+        donorList = [...donorMap.current.values()]
+          .sort((x, y) => y.coins - x.coins)
+          .map((d) => ({ id: d.id, uniqueId: '', name: d.name, avatar: d.avatar, coins: d.coins }));
+      }
+      setDonors(donorList.filter((d) => !userBlocked(d, bset)).slice(0, 8));
     }, FLUSH_MS);
 
     return () => {
@@ -78,7 +87,6 @@ export function useLiveData(blockedIds) {
   }, []);
 
   function handleEvent(p) {
-    // Ignore complètement les utilisateurs bloqués localement.
     if (BLOCKABLE.has(p.kind) && userBlocked(p.user, blockedRef.current)) return;
 
     const a = acc.current;
@@ -92,15 +100,15 @@ export function useLiveData(blockedIds) {
       case 'gift':
         if (p.streakInProgress) break;
         a.gifts++;
-        a.diamonds += p.diamondsTotal;
+        a.coins += p.diamondsTotal;
         if (p.diamondsTotal > 0 && p.user && p.user.id) {
-          const cur = donorMap.current.get(p.user.id) || { id: p.user.id, name: p.user.name, avatar: p.user.avatar, diamonds: 0 };
-          cur.diamonds += p.diamondsTotal;
+          const cur = donorMap.current.get(p.user.id) || { id: p.user.id, name: p.user.name, avatar: p.user.avatar, coins: 0 };
+          cur.coins += p.diamondsTotal;
           cur.name = p.user.name;
           cur.avatar = p.user.avatar;
           donorMap.current.set(p.user.id, cur);
         }
-        b.gifts.push({ id: ++idRef.current, user: p.user, giftName: p.giftName, giftImage: p.giftImage, count: p.count, diamonds: p.diamondsTotal });
+        b.gifts.push({ id: ++idRef.current, user: p.user, giftName: p.giftName, giftImage: p.giftImage, count: p.count, coins: p.diamondsTotal });
         b.dirty = true;
         break;
       case 'like':
@@ -110,6 +118,15 @@ export function useLiveData(blockedIds) {
         break;
       case 'viewers':
         a.viewers = p.viewerCount;
+        if (Array.isArray(p.top) && p.top.length) {
+          ranksRef.current = p.top.map((t) => ({
+            id: t.user.id,
+            uniqueId: t.user.uniqueId,
+            name: t.user.name,
+            avatar: t.user.avatar,
+            coins: t.score,
+          }));
+        }
         b.dirty = true;
         break;
       case 'follow':
@@ -139,6 +156,7 @@ export function useLiveData(blockedIds) {
     buf.current = { chat: [], gifts: [], dirty: false };
     acc.current = emptyAcc();
     donorMap.current = new Map();
+    ranksRef.current = [];
     setChat([]);
     setGifts([]);
     setDonors([]);
@@ -154,8 +172,8 @@ function userBlocked(user, set) {
 }
 
 function emptyStats() {
-  return { viewers: 0, likes: 0, diamonds: 0, gifts: 0, messages: 0, follows: 0, shares: 0, joins: 0 };
+  return { viewers: 0, likes: 0, coins: 0, gifts: 0, messages: 0, follows: 0, shares: 0, joins: 0 };
 }
 function emptyAcc() {
-  return { viewers: 0, likesReported: 0, likesCounted: 0, diamonds: 0, gifts: 0, messages: 0, follows: 0, shares: 0, joins: 0 };
+  return { viewers: 0, likesReported: 0, likesCounted: 0, coins: 0, gifts: 0, messages: 0, follows: 0, shares: 0, joins: 0 };
 }

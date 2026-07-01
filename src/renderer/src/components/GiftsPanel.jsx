@@ -1,4 +1,4 @@
-import { Gift, Gem } from 'lucide-react';
+import { Gift, Coins } from 'lucide-react';
 
 export default function GiftsPanel({ gifts }) {
   return (
@@ -23,9 +23,9 @@ export default function GiftsPanel({ gifts }) {
               </div>
               <div className="gift-meta">
                 <div className="gift-count">×{g.count}</div>
-                {g.diamonds > 0 && (
+                {g.coins > 0 && (
                   <div className="gift-dia">
-                    <Gem size={12} /> {g.diamonds}
+                    <Coins size={12} /> {g.coins}
                   </div>
                 )}
               </div>
