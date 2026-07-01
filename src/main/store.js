@@ -7,10 +7,11 @@ const path = require('path');
 const FILE = path.join(app.getPath('userData'), 'settings.json');
 
 const DEFAULTS = {
-  signApiKey: '',     // Clé API Euler Stream (facultative en lecture, conseillée)
-  sessionId: '',      // Cookie sessionid TikTok (requis pour ENVOYER des messages)
-  ttTargetIdc: '',    // Cookie tt-target-idc (ex: useast2a) — utile pour l'envoi
-  lastUsername: '',   // Dernier @pseudo utilisé
+  signApiKey: '',       // Clé API Euler Stream (facultative en lecture, conseillée)
+  sessionId: '',        // Cookie sessionid TikTok (requis pour ENVOYER des messages)
+  ttTargetIdc: '',      // Cookie tt-target-idc (ex: useast2a) — utile pour l'envoi
+  tiktokConnected: false, // true quand le compte est connecté via la fenêtre de login
+  lastUsername: '',     // Dernier @pseudo utilisé
 };
 
 function load() {

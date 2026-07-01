@@ -1,0 +1,21 @@
+// Logo de l'app : bulle de chat sur un dégradé cyan→rose, avec un point "live".
+export default function Logo({ size = 30 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="tlvGrad" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#22e6df" />
+          <stop offset="1" stopColor="#fe2c55" />
+        </linearGradient>
+      </defs>
+      <rect x="4" y="4" width="56" height="56" rx="17" fill="url(#tlvGrad)" />
+      <path
+        d="M19 20h26a5 5 0 0 1 5 5v13a5 5 0 0 1-5 5H32l-9 7v-7h-4a5 5 0 0 1-5-5V25a5 5 0 0 1 5-5z"
+        fill="#ffffff"
+      />
+      <circle cx="26" cy="31.5" r="3" fill="#fe2c55" />
+      <circle cx="34" cy="31.5" r="3" fill="#22232e" />
+      <circle cx="42" cy="31.5" r="3" fill="#22232e" />
+    </svg>
+  );
+}

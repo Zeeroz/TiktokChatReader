@@ -1,147 +1,15 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self';" />
-  <title>TikTok Live Viewer</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <!-- Barre supérieure -->
-  <header class="topbar">
-    <div class="brand">
-      <span class="brand-dot"></span>
-      <span class="brand-name">TikTok&nbsp;Live&nbsp;Viewer</span>
-    </div>
-
-    <div class="connect-box">
-      <span class="at">@</span>
-      <input id="username" type="text" placeholder="pseudo du créateur" autocomplete="off" spellcheck="false" />
-      <button id="connectBtn" class="btn btn-primary">Connecter</button>
-    </div>
-
-    <div class="topbar-right">
-      <div id="statusPill" class="status-pill status-idle">
-        <span class="status-led"></span>
-        <span id="statusText">Déconnecté</span>
-      </div>
-      <button id="settingsBtn" class="btn btn-ghost icon-btn" title="Réglages">⚙</button>
-    </div>
-  </header>
-
-  <!-- Corps -->
-  <main class="layout">
-    <!-- Colonne chat -->
-    <section class="panel chat-panel">
-      <div class="panel-head">
-        <h2>Chat</h2>
-        <span id="chatCount" class="badge">0</span>
-        <label class="autoscroll">
-          <input type="checkbox" id="autoscroll" checked /> défilement auto
-        </label>
-      </div>
-      <div id="chatFeed" class="feed chat-feed">
-        <div class="empty-state">Connecte-toi à un live pour voir le chat ici.</div>
-      </div>
-      <div class="send-bar">
-        <input id="messageInput" type="text" placeholder="Connecte-toi pour écrire dans le chat…" maxlength="150" disabled />
-        <button id="sendBtn" class="btn btn-primary" disabled>Envoyer</button>
-      </div>
-    </section>
-
-    <!-- Colonne droite -->
-    <aside class="sidecol">
-      <section class="panel stats-panel">
-        <div class="panel-head"><h2>Statistiques</h2></div>
-        <div class="stats-grid">
-          <div class="stat"><div class="stat-val" id="statViewers">—</div><div class="stat-lbl">Spectateurs</div></div>
-          <div class="stat"><div class="stat-val" id="statLikes">0</div><div class="stat-lbl">Likes</div></div>
-          <div class="stat accent"><div class="stat-val" id="statDiamonds">0</div><div class="stat-lbl">💎 Diamants</div></div>
-          <div class="stat"><div class="stat-val" id="statGifts">0</div><div class="stat-lbl">Cadeaux</div></div>
-          <div class="stat"><div class="stat-val" id="statMessages">0</div><div class="stat-lbl">Messages</div></div>
-          <div class="stat"><div class="stat-val" id="statFollows">0</div><div class="stat-lbl">Nouveaux abonnés</div></div>
-        </div>
-        <div class="stats-sub">
-          <span>🔗 Partages : <b id="statShares">0</b></span>
-          <span>👋 Arrivées : <b id="statJoins">0</b></span>
-          <span>⏱ Durée : <b id="statUptime">00:00</b></span>
-        </div>
-      </section>
-
-      <section class="panel gifts-panel">
-        <div class="panel-head"><h2>Cadeaux</h2><span id="giftCount" class="badge">0</span></div>
-        <div id="giftFeed" class="feed gift-feed">
-          <div class="empty-state small">Les cadeaux apparaîtront ici.</div>
-        </div>
-      </section>
-
-      <section class="panel donors-panel">
-        <div class="panel-head"><h2>Top donateurs</h2></div>
-        <div id="donorsList" class="donors">
-          <div class="empty-state small">Personne pour l'instant.</div>
-        </div>
-      </section>
-    </aside>
-  </main>
-
-  <!-- Modale réglages -->
-  <div id="settingsOverlay" class="overlay hidden">
-    <div class="modal">
-      <div class="modal-head">
-        <h2>Réglages</h2>
-        <button id="settingsClose" class="btn btn-ghost icon-btn">✕</button>
-      </div>
-      <div class="modal-body">
-        <label class="field">
-          <span class="field-label">Clé API Euler Stream <em>(facultative en lecture, recommandée)</em></span>
-          <input id="setSignKey" type="password" placeholder="ex: ZHU3...  — gratuit sur eulerstream.com" autocomplete="off" />
-        </label>
-
-        <div class="divider"><span>Envoi de messages (facultatif)</span></div>
-        <p class="hint">
-          Pour écrire dans le chat, il faut connecter ton compte TikTok via son cookie
-          <code>sessionid</code>. ⚠️ Garde-le secret et n'envoie jamais de spam — risque de blocage du compte.
-        </p>
-        <label class="field">
-          <span class="field-label">Cookie <code>sessionid</code></span>
-          <input id="setSessionId" type="password" placeholder="valeur du cookie sessionid de tiktok.com" autocomplete="off" />
-        </label>
-        <label class="field">
-          <span class="field-label">Cookie <code>tt-target-idc</code> <em>(souvent useast2a / alisg…)</em></span>
-          <input id="setTtIdc" type="text" placeholder="ex: useast2a" autocomplete="off" />
-        </label>
-        <details class="help">
-          <summary>Comment récupérer ces cookies ?</summary>
-          <ol>
-            <li>Ouvre <b>tiktok.com</b> dans ton navigateur, connecté à ton compte.</li>
-            <li>Touche <b>F12</b> → onglet <b>Application</b> (ou Stockage) → <b>Cookies</b> → https://www.tiktok.com.</li>
-            <li>Copie la valeur de <code>sessionid</code> et de <code>tt-target-idc</code>.</li>
-          </ol>
-        </details>
-      </div>
-      <div class="update-row">
-        <span class="version-label">Version <b id="appVersion">…</b></span>
-        <span id="updateCheckNote" class="update-check-note"></span>
-        <button id="checkUpdateBtn" class="btn btn-ghost">Vérifier les mises à jour</button>
-      </div>
-      <div class="modal-foot">
-        <span id="settingsSaved" class="saved-note"></span>
-        <button id="settingsSave" class="btn btn-primary">Enregistrer</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bannière de mise à jour -->
-  <div id="updateBanner" class="update-banner hidden">
-    <span class="update-icon">⬆️</span>
-    <span id="updateText"></span>
-    <button id="updateInstallBtn" class="btn btn-primary hidden">Redémarrer pour installer</button>
-    <button id="updateDismiss" class="btn btn-ghost icon-btn" title="Masquer">✕</button>
-  </div>
-
-  <div id="toast" class="toast hidden"></div>
-
-  <script src="renderer.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self';"
+    />
+    <title>TikTok Live Viewer</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>

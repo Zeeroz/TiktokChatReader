@@ -4,10 +4,13 @@
   "description": "Visualiseur de chat, statistiques et cadeaux pour les lives TikTok",
   "main": "src/main/main.js",
   "scripts": {
-    "start": "electron .",
-    "dist": "electron-builder",
-    "pack": "electron-builder --dir",
-    "release": "electron-builder --win --publish always"
+    "dev": "vite",
+    "build:renderer": "vite build",
+    "build:icon": "node scripts/make-icon.mjs",
+    "start": "vite build && electron .",
+    "dist": "vite build && electron-builder",
+    "pack": "vite build && electron-builder --dir",
+    "release": "vite build && electron-builder --win --publish always"
   },
   "keywords": [
     "tiktok",
@@ -21,13 +24,17 @@
     "appId": "com.benjamin.tiktokliveviewer",
     "productName": "TikTok Live Viewer",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build-resources"
     },
     "files": [
-      "src/**/*",
+      "src/main/**/*",
+      "src/preload/**/*",
+      "build/renderer/**/*",
       "package.json"
     ],
     "win": {
+      "icon": "build-resources/icon.ico",
       "target": [
         {
           "target": "portable",
@@ -58,16 +65,25 @@
       {
         "provider": "github",
         "owner": "Zeeroz",
-        "repo": "TiktokChatReader"
+        "repo": "TiktokChatReader",
+        "releaseType": "release"
       }
     ]
   },
   "dependencies": {
     "electron-updater": "^6.8.9",
+    "lucide-react": "^1.22.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "tiktok-live-connector": "^2.4.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.3",
     "electron": "^39.0.0",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "png-to-ico": "^3.0.1",
+    "sharp": "^0.35.2",
+    "vite": "^8.1.2",
+    "vite-plugin-singlefile": "^2.3.3"
   }
 }

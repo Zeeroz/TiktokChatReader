@@ -6,6 +6,14 @@ contextBridge.exposeInMainWorld('api', {
   disconnect: () => ipcRenderer.invoke('tiktok:disconnect'),
   sendMessage: (text) => ipcRenderer.invoke('tiktok:send', { text }),
 
+  loginTikTok: () => ipcRenderer.invoke('tiktok:login'),
+  logoutTikTok: () => ipcRenderer.invoke('tiktok:logout'),
+  onLogin: (cb) => {
+    const handler = (_e, payload) => cb(payload);
+    ipcRenderer.on('tiktok:login', handler);
+    return () => ipcRenderer.removeListener('tiktok:login', handler);
+  },
+
   getSettings: () => ipcRenderer.invoke('settings:get'),
   saveSettings: (patch) => ipcRenderer.invoke('settings:save', patch),
 

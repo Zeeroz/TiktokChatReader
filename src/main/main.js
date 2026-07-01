@@ -1,8 +1,10 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, session } = require('electron');
 const path = require('path');
 const store = require('./store');
 const { TikTokService } = require('./tiktok');
 const updater = require('./updater');
+
+const TIKTOK_PARTITION = 'persist:tiktok';
 
 let win = null;
 const service = new TikTokService();
@@ -24,7 +26,16 @@ function createWindow() {
   });
 
   win.removeMenu();
-  win.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+
+  // En dev (serveur Vite), on charge l'URL ; sinon le build React.
+  const devUrl = process.env.VITE_DEV_SERVER_URL;
+  if (devUrl) {
+    win.loadURL(devUrl);
+    win.webContents.openDevTools({ mode: 'detach' });
+  } else {
+    win.loadFile(path.join(__dirname, '..', '..', 'build', 'renderer', 'index.html'));
+  }
+  if (process.env.TLV_DEBUG) win.webContents.openDevTools({ mode: 'detach' });
 
   // Ouvrir les liens externes (profils, etc.) dans le navigateur, jamais dans l'app.
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -115,6 +126,75 @@ ipcMain.handle('tiktok:send', async (_e, args) => {
   } catch (err) {
     return { ok: false, error: friendlyError(err) };
   }
+});
+
+// --- Connexion TikTok in-app (récupération auto des cookies) ------------------
+
+let loginWin = null;
+
+function openTikTokLogin() {
+  if (loginWin && !loginWin.isDestroyed()) {
+    loginWin.focus();
+    return;
+  }
+  const ses = session.fromPartition(TIKTOK_PARTITION);
+
+  loginWin = new BrowserWindow({
+    width: 480,
+    height: 720,
+    parent: win || undefined,
+    title: 'Connexion à TikTok',
+    autoHideMenuBar: true,
+    backgroundColor: '#111111',
+    webPreferences: {
+      partition: TIKTOK_PARTITION,
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
+  loginWin.removeMenu();
+  // Autoriser les pop-ups d'authentification (Google/Apple…) dans la même session.
+  loginWin.webContents.setWindowOpenHandler(() => ({ action: 'allow' }));
+  loginWin.loadURL('https://www.tiktok.com/login');
+
+  let captured = false;
+  const tryCapture = async () => {
+    if (captured || !loginWin || loginWin.isDestroyed()) return;
+    try {
+      const cookies = await ses.cookies.get({ url: 'https://www.tiktok.com' });
+      const sid = cookies.find((c) => c.name === 'sessionid');
+      if (sid && sid.value) {
+        captured = true;
+        const idc = cookies.find((c) => c.name === 'tt-target-idc');
+        store.save({ sessionId: sid.value, ttTargetIdc: idc ? idc.value : '', tiktokConnected: true });
+        forward('tiktok:login', { ok: true });
+        clearInterval(poll);
+        if (loginWin && !loginWin.isDestroyed()) loginWin.close();
+      }
+    } catch {}
+  };
+
+  loginWin.webContents.on('did-navigate', tryCapture);
+  loginWin.webContents.on('did-navigate-in-page', tryCapture);
+  const poll = setInterval(tryCapture, 2000);
+
+  loginWin.on('closed', () => {
+    clearInterval(poll);
+    if (!captured) forward('tiktok:login', { ok: false, cancelled: true });
+    loginWin = null;
+  });
+}
+
+ipcMain.handle('tiktok:login', () => {
+  openTikTokLogin();
+  return { ok: true };
+});
+
+ipcMain.handle('tiktok:logout', async () => {
+  try {
+    await session.fromPartition(TIKTOK_PARTITION).clearStorageData();
+  } catch {}
+  return store.save({ sessionId: '', ttTargetIdc: '', tiktokConnected: false });
 });
 
 // --- Cycle de vie -------------------------------------------------------------
