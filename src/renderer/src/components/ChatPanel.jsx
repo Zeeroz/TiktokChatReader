@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Send, Heart, Share2, Star, BadgeCheck, MessageCircle } from 'lucide-react';
+import { Send, Heart, Share2, Star, BadgeCheck, MessageCircle, Ban } from 'lucide-react';
 import Avatar from './Avatar.jsx';
 
 const SYS = {
@@ -8,7 +8,7 @@ const SYS = {
   sub: { icon: Star, cls: 'sub', text: "s'est abonné(e)" },
 };
 
-export default function ChatPanel({ chat, connected, onSend, messageCount }) {
+export default function ChatPanel({ chat, connected, onSend, onBlock, messageCount }) {
   const feedRef = useRef(null);
   const [autoscroll, setAutoscroll] = useState(true);
   const [text, setText] = useState('');
@@ -54,6 +54,9 @@ export default function ChatPanel({ chat, connected, onSend, messageCount }) {
                   </span>
                   <span className="chat-text">{m.content}</span>
                 </div>
+                <button className="block-btn" title={`Bloquer ${m.user.name}`} onClick={() => onBlock(m.user)}>
+                  <Ban size={13} />
+                </button>
               </div>
             ) : (
               <SysLine key={m.id} item={m} />

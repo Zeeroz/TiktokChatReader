@@ -9,6 +9,8 @@ export default function SettingsModal({
   onSave,
   onLoginTikTok,
   onLogoutTikTok,
+  blocked,
+  onUnblock,
   version,
   checkNote,
   onCheckUpdate,
@@ -95,6 +97,25 @@ export default function SettingsModal({
                 <span className="field-label">Cookie tt-target-idc <em>(ex: useast2a)</em></span>
                 <input type="text" value={ttTargetIdc} onChange={(e) => setTtTargetIdc(e.target.value)} placeholder="ex: useast2a" autoComplete="off" />
               </label>
+            </div>
+          )}
+
+          <div className="section-title mt">Utilisateurs bloqués</div>
+          {!blocked || blocked.length === 0 ? (
+            <p className="hint">Aucun utilisateur bloqué. Survole un message dans le chat et clique sur l'icône pour masquer une personne.</p>
+          ) : (
+            <div className="blocked-list">
+              {blocked.map((b) => (
+                <div className="blocked-row" key={b.id || b.uniqueId}>
+                  <span className="blocked-name">
+                    {b.name}
+                    {b.uniqueId ? ` · @${b.uniqueId}` : ''}
+                  </span>
+                  <button className="btn btn-ghost icon-btn" title="Débloquer" onClick={() => onUnblock(b.id || b.uniqueId)}>
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </div>

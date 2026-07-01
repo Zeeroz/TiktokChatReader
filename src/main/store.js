@@ -12,6 +12,7 @@ const DEFAULTS = {
   ttTargetIdc: '',      // Cookie tt-target-idc (ex: useast2a) — utile pour l'envoi
   tiktokConnected: false, // true quand le compte est connecté via la fenêtre de login
   lastUsername: '',     // Dernier @pseudo utilisé
+  blockedUsers: [],     // Utilisateurs masqués localement : [{ id, uniqueId, name }]
 };
 
 function load() {

@@ -40,6 +40,16 @@ npm start       # build du renderer puis lancement d'Electron
 2. Le chat, les statistiques et les cadeaux s'affichent en direct.
 3. **Déconnecter** pour arrêter, ou change de pseudo pour suivre un autre live.
 
+### Masquer quelqu'un (blocage local)
+
+Survole un message dans le chat et clique sur l'icône ⃠ : cette personne est **masquée
+localement** (ses messages, cadeaux et événements disparaissent de ton app). Gère la liste
+dans ⚙ Réglages → *Utilisateurs bloqués*.
+
+> C'est un masquage **côté application** (pratique contre le spam/les trolls), pas un
+> bannissement TikTok — bannir un spectateur d'un live est réservé à l'hôte et n'est pas
+> exposé par la bibliothèque utilisée.
+
 ### Écrire dans le chat
 
 Ouvre ⚙ **Réglages → « Se connecter à TikTok »** : une fenêtre de login TikTok s'ouvre,

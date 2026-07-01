@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import TopBar from './components/TopBar.jsx';
 import ChatPanel from './components/ChatPanel.jsx';
 import StatsPanel from './components/StatsPanel.jsx';
@@ -9,7 +9,12 @@ import UpdateBanner from './components/UpdateBanner.jsx';
 import { useLiveData } from './hooks/useLiveData.js';
 
 export default function App() {
-  const live = useLiveData();
+  const [blocked, setBlocked] = useState([]);
+  const blockedIds = useMemo(
+    () => new Set(blocked.flatMap((b) => [b.id, b.uniqueId].filter(Boolean))),
+    [blocked]
+  );
+  const live = useLiveData(blockedIds);
 
   const [username, setUsername] = useState('');
   const [connected, setConnected] = useState(false);
@@ -44,6 +49,7 @@ export default function App() {
       try {
         const s = await window.api.getSettings();
         setSettings(s);
+        setBlocked(s.blockedUsers || []);
         if (s.lastUsername) setUsername(s.lastUsername);
       } catch {}
       try {
@@ -203,6 +209,30 @@ export default function App() {
     showToast('Compte TikTok déconnecté.', 'ok');
   };
 
+  const blockUser = useCallback(
+    (user) => {
+      if (!user || (!user.id && !user.uniqueId)) return;
+      const already = blocked.some(
+        (b) => (user.id && b.id === user.id) || (user.uniqueId && b.uniqueId === user.uniqueId)
+      );
+      if (already) return;
+      const next = [...blocked, { id: user.id || '', uniqueId: user.uniqueId || '', name: user.name || user.uniqueId || 'Inconnu' }];
+      setBlocked(next);
+      window.api.saveSettings({ blockedUsers: next });
+      showToast(`${user.name || '@' + user.uniqueId} bloqué`, null);
+    },
+    [blocked, showToast]
+  );
+
+  const unblockUser = useCallback(
+    (key) => {
+      const next = blocked.filter((b) => b.id !== key && b.uniqueId !== key);
+      setBlocked(next);
+      window.api.saveSettings({ blockedUsers: next });
+    },
+    [blocked]
+  );
+
   return (
     <>
       <TopBar
@@ -218,7 +248,7 @@ export default function App() {
       />
 
       <main className="layout">
-        <ChatPanel chat={live.chat} connected={connected} onSend={onSend} messageCount={live.stats.messages} />
+        <ChatPanel chat={live.chat} connected={connected} onSend={onSend} onBlock={blockUser} messageCount={live.stats.messages} />
         <aside className="sidecol">
           <StatsPanel stats={live.stats} uptime={uptime} connected={connected} />
           <GiftsPanel gifts={live.gifts} />
@@ -234,6 +264,8 @@ export default function App() {
         onSave={saveSettings}
         onLoginTikTok={loginTikTok}
         onLogoutTikTok={logoutTikTok}
+        blocked={blocked}
+        onUnblock={unblockUser}
         version={version}
         checkNote={checkNote}
         onCheckUpdate={checkUpdate}

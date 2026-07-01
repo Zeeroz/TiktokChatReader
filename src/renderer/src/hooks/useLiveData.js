@@ -3,10 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 const MAX_CHAT = 200;
 const MAX_GIFTS = 40;
 const FLUSH_MS = 180;
+// Types d'événements liés à un utilisateur → filtrables par le blocage local.
+const BLOCKABLE = new Set(['chat', 'gift', 'follow', 'share', 'subscribe', 'member']);
 
 // Agrège le flux d'événements TikTok et le pousse dans l'état React de façon throttlée
 // (les likes/chat peuvent arriver très vite → on tamponne puis on met à jour ~5 fois/s).
-export function useLiveData() {
+// `blockedIds` (Set de ids/uniqueId) masque les utilisateurs bloqués localement.
+export function useLiveData(blockedIds) {
   const [chat, setChat] = useState([]);
   const [gifts, setGifts] = useState([]);
   const [donors, setDonors] = useState([]);
@@ -16,6 +19,24 @@ export function useLiveData() {
   const acc = useRef(emptyAcc());
   const donorMap = useRef(new Map());
   const idRef = useRef(0);
+  const blockedRef = useRef(blockedIds || new Set());
+
+  // Garde la référence du set de blocage à jour pour le gestionnaire d'événements.
+  useEffect(() => {
+    blockedRef.current = blockedIds || new Set();
+  }, [blockedIds]);
+
+  // Purge des entrées déjà affichées quand la liste de blocage change.
+  useEffect(() => {
+    const set = blockedIds || new Set();
+    if (set.size === 0) return;
+    setChat((prev) => prev.filter((m) => !userBlocked(m.user, set)));
+    setGifts((prev) => prev.filter((g) => !userBlocked(g.user, set)));
+    for (const id of [...donorMap.current.keys()]) {
+      if (set.has(id)) donorMap.current.delete(id);
+    }
+    setDonors((prev) => prev.filter((d) => !set.has(d.id)));
+  }, [blockedIds]);
 
   useEffect(() => {
     const unsub = window.api.onEvent(handleEvent);
@@ -57,6 +78,9 @@ export function useLiveData() {
   }, []);
 
   function handleEvent(p) {
+    // Ignore complètement les utilisateurs bloqués localement.
+    if (BLOCKABLE.has(p.kind) && userBlocked(p.user, blockedRef.current)) return;
+
     const a = acc.current;
     const b = buf.current;
     switch (p.kind) {
@@ -122,6 +146,11 @@ export function useLiveData() {
   }
 
   return { chat, gifts, donors, stats, reset };
+}
+
+function userBlocked(user, set) {
+  if (!user || !set || set.size === 0) return false;
+  return (!!user.id && set.has(user.id)) || (!!user.uniqueId && set.has(user.uniqueId));
 }
 
 function emptyStats() {
