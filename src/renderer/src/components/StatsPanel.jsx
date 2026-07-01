@@ -5,7 +5,7 @@ export default function StatsPanel({ stats, uptime, connected }) {
   const cards = [
     { icon: Users, label: 'Spectateurs', value: connected ? fmt(stats.viewers) : '—' },
     { icon: Heart, label: 'Likes', value: fmt(stats.likes) },
-    { icon: Gem, label: 'Diamants', value: fmt(stats.diamonds), accent: true },
+    { icon: Gem, label: 'Diamants', value: fmt(stats.diamonds) },
     { icon: Gift, label: 'Cadeaux', value: fmt(stats.gifts) },
     { icon: MessageSquare, label: 'Messages', value: fmt(stats.messages) },
     { icon: UserPlus, label: 'Abonnés', value: fmt(stats.follows) },

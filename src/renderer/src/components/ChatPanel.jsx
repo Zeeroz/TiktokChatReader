@@ -5,7 +5,7 @@ import Avatar from './Avatar.jsx';
 const SYS = {
   follow: { icon: Heart, cls: 'follow', text: "vient de s'abonner" },
   share: { icon: Share2, cls: 'share', text: 'a partagé le live' },
-  sub: { icon: Star, cls: 'sub', text: "s'est abonné(e) ⭐" },
+  sub: { icon: Star, cls: 'sub', text: "s'est abonné(e)" },
 };
 
 export default function ChatPanel({ chat, connected, onSend, messageCount }) {

@@ -1,21 +1,12 @@
-// Logo de l'app : bulle de chat sur un dégradé cyan→rose, avec un point "live".
-export default function Logo({ size = 30 }) {
+// Logo minimal et plat (monochrome) : une simple bulle de chat.
+export default function Logo({ size = 24 }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="tlvGrad" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#22e6df" />
-          <stop offset="1" stopColor="#fe2c55" />
-        </linearGradient>
-      </defs>
-      <rect x="4" y="4" width="56" height="56" rx="17" fill="url(#tlvGrad)" />
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="2.5" y="2.5" width="27" height="27" rx="8" stroke="currentColor" strokeOpacity="0.28" />
       <path
-        d="M19 20h26a5 5 0 0 1 5 5v13a5 5 0 0 1-5 5H32l-9 7v-7h-4a5 5 0 0 1-5-5V25a5 5 0 0 1 5-5z"
-        fill="#ffffff"
+        d="M10 11.5h12a2.2 2.2 0 0 1 2.2 2.2v4.6a2.2 2.2 0 0 1-2.2 2.2h-6l-3.6 2.8v-2.8H10a2.2 2.2 0 0 1-2.2-2.2v-4.6A2.2 2.2 0 0 1 10 11.5z"
+        fill="currentColor"
       />
-      <circle cx="26" cy="31.5" r="3" fill="#fe2c55" />
-      <circle cx="34" cy="31.5" r="3" fill="#22232e" />
-      <circle cx="42" cy="31.5" r="3" fill="#22232e" />
     </svg>
   );
 }

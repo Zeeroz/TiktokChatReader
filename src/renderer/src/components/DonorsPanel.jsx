@@ -2,8 +2,6 @@ import { Trophy, Gem } from 'lucide-react';
 import Avatar from './Avatar.jsx';
 import { fmt } from '../lib/format.js';
 
-const MEDAL = ['🥇', '🥈', '🥉'];
-
 export default function DonorsPanel({ donors }) {
   return (
     <section className="panel donors-panel">
@@ -17,7 +15,7 @@ export default function DonorsPanel({ donors }) {
         ) : (
           donors.map((d, i) => (
             <div key={d.id} className="donor">
-              <div className="donor-rank">{MEDAL[i] || `#${i + 1}`}</div>
+              <div className="donor-rank">{i + 1}</div>
               <Avatar url={d.avatar} size={26} alt={d.name} />
               <div className="donor-name">{d.name}</div>
               <div className="donor-dia">
